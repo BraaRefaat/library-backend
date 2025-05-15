@@ -14,6 +14,7 @@ class Book extends Model
     protected $primaryKey = 'book_id';
     protected $keyType = 'string';
     public $incrementing = false;
+    public $timestamps = false; // Disable timestamps
 
     protected $fillable = [
         'book_id',
@@ -48,5 +49,30 @@ class Book extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(Author::class);
+    }
+
+    /**
+     * Set the user who added this book by storing their U_name
+     *
+     * @param int $userId The ID of the user who added this book
+     * @return void
+     */
+    public function setAddedByUserId(int $userId): void
+    {
+        $user = User::find($userId);
+        if ($user) {
+            $this->AddBy = $user->U_name;
+            $this->save();
+        }
+    }
+    
+    /**
+     * Get the user who added this book by U_name
+     *
+     * @return User|null
+     */
+    public function getAddedByUser()
+    {
+        return User::where('U_name', $this->AddBy)->first();
     }
 }

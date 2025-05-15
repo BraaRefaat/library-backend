@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('periodicals', function (Blueprint $table) {
+        Schema::create('journals', function (Blueprint $table) {
             $table->id('D_ID');
             $table->string('D_title');
             $table->string('D_Author');

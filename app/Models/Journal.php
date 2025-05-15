@@ -6,42 +6,35 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Message extends Model
+class Journal extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'M_ID';
+    protected $primaryKey = 'D_ID';
     public $timestamps = false; // Disable timestamps
 
     protected $fillable = [
-        'M_title',
-        'M_Author',
-        'type',
-        'copies',
+        'D_title',
+        'D_Author',
         'AddBy',
+        'Num_magazine',
+        'name_magazine',
+        'Magazine_folder',
+        'year',
+        'D_number',
+        'D_notes',
         'DateAdd',
-        'M_number',
-        'M_notes',
-        'department_id',
     ];
 
     protected $casts = [
         'DateAdd' => 'date',
-        'copies' => 'integer',
+        'year' => 'integer',
     ];
 
     /**
-     * Get the department that the message belongs to
-     */
-    public function department(): BelongsTo
-    {
-        return $this->belongsTo(Department::class, 'department_id', 'C_ID');
-    }
-
-    /**
-     * Set the user who added this message by storing their U_name
+     * Set the user who added this periodical by storing their U_name
      *
-     * @param int $userId The ID of the user who added this message
+     * @param int $userId The ID of the user who added this periodical
      * @return void
      */
     public function setAddedByUserId(int $userId): void
@@ -52,9 +45,9 @@ class Message extends Model
             $this->save();
         }
     }
-    
+
     /**
-     * Get the user who added this message by U_name
+     * Get the user who added this periodical by U_name
      *
      * @return User|null
      */

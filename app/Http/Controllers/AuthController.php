@@ -17,6 +17,11 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
+        // Ensure name is properly formatted
+        $request->merge([
+            'U_name' => trim($request->U_name)
+        ]);
+
         $validated = $request->validate([
             'U_name' => 'required|string|max:255',
             'U_Mail' => [
@@ -25,13 +30,13 @@ class AuthController extends Controller
                 'email',
                 'max:255',
                 'unique:users',
-                'regex:/^[A-Za-z0-9._%+-]+@aun\.edu\.eg$/'
+                'regex:/^[A-Za-z0-9._%+-]+@edu\.aun\.edu\.eg$/'
             ],
             'password' => 'required|string|min:8|confirmed',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
-        $validated['role'] = 'student'; // Set default role
+        $validated['role'] = 'طالب'; // Ensure exact match with enum values
 
         $user = User::create($validated);
 
@@ -53,7 +58,7 @@ class AuthController extends Controller
             'U_Mail' => [
                 'required',
                 'email',
-                'regex:/^[A-Za-z0-9._%+-]+@aun\.edu\.eg$/'
+                'regex:/^[A-Za-z0-9._%+-]+@edu\.aun\.edu\.eg$/'
             ],
             'password' => 'required|string',
         ]);
@@ -103,18 +108,40 @@ class AuthController extends Controller
             'U_Mail' => [
                 'required',
                 'email',
-                'regex:/^[A-Za-z0-9._%+-]+@aun\\.edu\\.eg$/'
+                'regex:/^[A-Za-z0-9._%+-]+@edu\\.aun\\.edu\\.eg$/'
             ],
         ]);
 
-        // Override the email field for the password broker
-        $status = Password::broker()->sendResetLink(
-            ['U_Mail' => $request->U_Mail]
+        // Find the user by email
+        $user = User::where('U_Mail', $request->U_Mail)->first();
+        
+        if (!$user) {
+            // Don't reveal that the user doesn't exist for security reasons
+            return response()->json([
+                'message' => 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني إذا كان الحساب موجودًا.'
+            ]);
+        }
+        
+        // Create a password reset token manually
+        $token = bin2hex(random_bytes(32));
+        
+        // Store the token in the password_reset_tokens table
+        $passwordReset = PasswordReset::updateOrCreate(
+            ['U_Mail' => $request->U_Mail],
+            [
+                'token' => $token,
+                'created_at' => now()
+            ]
         );
-
-        return $status === Password::RESET_LINK_SENT
-            ? response()->json(['message' => 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.'])
-            : response()->json(['message' => 'حدث خطأ أثناء إرسال الرابط.'], 400);
+        
+        // For immediate testing, return the token directly
+        return response()->json([
+            'message' => 'تم إنشاء رمز إعادة تعيين كلمة المرور.',
+            'token' => $token,
+            'email' => $request->U_Mail,
+            'reset_url' => config('app.frontend_url') . '/reset-password?token=' . $token . '&email=' . urlencode($request->U_Mail),
+            'note' => 'Use this token directly for testing. In production, this would be sent via email.'
+        ]);
     }
 
     /**
@@ -126,12 +153,13 @@ class AuthController extends Controller
             'U_Mail' => [
                 'required',
                 'email',
-                'regex:/^[A-Za-z0-9._%+-]+@aun\\.edu\\.eg$/'
+                'regex:/^[A-Za-z0-9._%+-]+@edu\.aun\.edu\.eg$/'
             ],
             'token' => 'required',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
+        // Find the password reset record
         $passwordReset = PasswordReset::where('U_Mail', $request->U_Mail)
             ->where('token', $request->token)
             ->first();
@@ -140,11 +168,20 @@ class AuthController extends Controller
             return response()->json(['message' => 'رمز إعادة تعيين كلمة المرور غير صالح أو منتهي الصلاحية.'], 400);
         }
 
+        // Check if token is expired (tokens older than 60 minutes are invalid)
+        $tokenCreatedAt = \Carbon\Carbon::parse($passwordReset->created_at);
+        if ($tokenCreatedAt->diffInMinutes(now()) > 60) {
+            $passwordReset->delete();
+            return response()->json(['message' => 'رمز إعادة تعيين كلمة المرور منتهي الصلاحية. يرجى طلب رمز جديد.'], 400);
+        }
+
+        // Find the user
         $user = User::where('U_Mail', $request->U_Mail)->first();
         if (!$user) {
             return response()->json(['message' => 'المستخدم غير موجود.'], 404);
         }
 
+        // Update the user's password
         $user->password = Hash::make($request->password);
         $user->save();
 

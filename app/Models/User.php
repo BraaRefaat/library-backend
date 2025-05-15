@@ -52,4 +52,15 @@ class User extends Authenticatable
     {
         return $this->U_Mail;
     }
+    
+    /**
+     * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new \App\Notifications\ResetPasswordNotification($token, $this->U_Mail));
+    }
 }

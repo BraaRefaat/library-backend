@@ -123,4 +123,17 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Frontend URL
+    |--------------------------------------------------------------------------
+    |
+    | This URL is used for generating links in password reset emails and other
+    | frontend-related functionality. You should set this to the URL of your
+    | frontend application.
+    |
+    */
+
+    'frontend_url' => env('APP_FRONTEND_URL', 'http://localhost:5173'),
+
 ];

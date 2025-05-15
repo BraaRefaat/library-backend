@@ -24,7 +24,7 @@ class BookController extends Controller
         $book = Book::find($id);
 
         if (!$book) {
-            return response()->json(['message' => 'Book not found'], 404);
+            return response()->json(['message' => 'الكتاب غير موجود'], 404);
         }
 
         // Increment the views count
