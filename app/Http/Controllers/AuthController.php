@@ -10,7 +10,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Password;
 use App\Models\PasswordReset;
 
-class AuthController extends Controller
+class AuthController
 {
     /**
      * Register a new user
@@ -33,6 +33,14 @@ class AuthController extends Controller
                 'regex:/^[A-Za-z0-9._%+-]+@edu\.aun\.edu\.eg$/'
             ],
             'password' => 'required|string|min:8|confirmed',
+        ], [
+            'U_Mail.required' => 'البريد الإلكتروني مطلوب',
+            'U_Mail.email' => 'صيغة البريد الإلكتروني غير صحيحة',
+            'U_Mail.unique' => 'هذا البريد الإلكتروني مسجل بالفعل',
+            'U_Mail.regex' => 'يجب أن يكون البريد الإلكتروني من نطاق @edu.aun.edu.eg',
+            'password.required' => 'كلمة المرور مطلوبة',
+            'password.min' => 'يجب أن تكون كلمة المرور 8 أحرف على الأقل',
+            'password.confirmed' => 'تأكيد كلمة المرور غير متطابق',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
@@ -45,7 +53,7 @@ class AuthController extends Controller
         return response()->json([
             'user' => $user,
             'token' => $token,
-            'message' => 'User registered successfully'
+            'message' => 'تم تسجيل المستخدم بنجاح'
         ], 201);
     }
 
@@ -61,11 +69,16 @@ class AuthController extends Controller
                 'regex:/^[A-Za-z0-9._%+-]+@edu\.aun\.edu\.eg$/'
             ],
             'password' => 'required|string',
+        ], [
+            'U_Mail.required' => 'البريد الإلكتروني مطلوب',
+            'U_Mail.email' => 'صيغة البريد الإلكتروني غير صحيحة',
+            'U_Mail.regex' => 'يجب أن يكون البريد الإلكتروني من نطاق @edu.aun.edu.eg',
+            'password.required' => 'كلمة المرور مطلوبة',
         ]);
 
         if (!Auth::attempt(['U_Mail' => $validated['U_Mail'], 'password' => $validated['password']])) {
             throw ValidationException::withMessages([
-                'U_Mail' => ['The provided credentials are incorrect.'],
+                'U_Mail' => ['.إن بيانات المستخدم المقدمة غير صحيحة'],
             ]);
         }
 
@@ -75,7 +88,7 @@ class AuthController extends Controller
         return response()->json([
             'user' => $user,
             'token' => $token,
-            'message' => 'Login successful'
+            'message' => 'تم تسجيل الدخول بنجاح'
         ]);
     }
 
@@ -87,7 +100,7 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            'message' => 'Logged out successfully'
+            'message' => 'تم تسجيل الخروج بنجاح'
         ]);
     }
 
@@ -114,33 +127,32 @@ class AuthController extends Controller
 
         // Find the user by email
         $user = User::where('U_Mail', $request->U_Mail)->first();
-        
+
         if (!$user) {
             // Don't reveal that the user doesn't exist for security reasons
             return response()->json([
                 'message' => 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني إذا كان الحساب موجودًا.'
             ]);
         }
-        
+
         // Create a password reset token manually
         $token = bin2hex(random_bytes(32));
-        
-        // Store the token in the password_reset_tokens table
-        $passwordReset = PasswordReset::updateOrCreate(
-            ['U_Mail' => $request->U_Mail],
-            [
-                'token' => $token,
-                'created_at' => now()
-            ]
-        );
-        
-        // For immediate testing, return the token directly
-        return response()->json([
-            'message' => 'تم إنشاء رمز إعادة تعيين كلمة المرور.',
+
+        // Delete any existing reset tokens for this email
+        PasswordReset::where('U_Mail', $request->U_Mail)->delete();
+
+        // Create new reset token
+        PasswordReset::create([
+            'U_Mail' => $request->U_Mail,
             'token' => $token,
-            'email' => $request->U_Mail,
-            'reset_url' => config('app.frontend_url') . '/reset-password?token=' . $token . '&email=' . urlencode($request->U_Mail),
-            'note' => 'Use this token directly for testing. In production, this would be sent via email.'
+            'created_at' => now()
+        ]);
+
+        // Dispatch the custom job to send the email
+        \App\Jobs\SendPasswordResetEmailJob::dispatch($request->U_Mail, $token);
+
+        return response()->json([
+            'message' => 'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني.'
         ]);
     }
 

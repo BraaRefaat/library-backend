@@ -16,6 +16,8 @@ class Department extends Model
         'C_name',
     ];
 
+    public $timestamps = false;
+
     /**
      * Get the messages that belong to the department
      */

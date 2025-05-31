@@ -7,6 +7,8 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\JournalController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserController;
 
 // Books routes
 Route::group(['prefix' => 'books'], function () {
@@ -57,8 +59,18 @@ Route::group(['prefix' => 'journals'], function () {
     Route::delete('/{id}', [JournalController::class, 'destroy']);
 });
 
+// Dashboard route
+Route::get('/dashboard/counts', [DashboardController::class, 'counts']);
+
 // Protected routes (require authentication)
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+
+    // User management routes (requires admin authorization)
+    Route::group(['prefix' => 'users'], function () {
+        Route::get('/', [UserController::class, 'index']); // Get all users
+        Route::put('/{id}/role', [UserController::class, 'updateRole']); // Update user role
+        Route::delete('/{id}', [UserController::class, 'destroy']); // Delete a user
+    });
 });

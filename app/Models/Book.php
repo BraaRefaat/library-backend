@@ -23,12 +23,19 @@ class Book extends Model
         'language',
         'AddBy',
         'DateAdd',
+        'year', // Add year to fillable
         'views',
+        'image', // Add image to fillable
+        'stock', // Add stock to fillable
     ];
 
     protected $casts = [
         'DateAdd' => 'date',
+        'year' => 'integer', // Cast year as integer
+        'stock' => 'integer', // Cast stock as integer
     ];
+
+    protected $appends = ['image_url'];
 
     /**
      * Boot function from laravel.
@@ -46,11 +53,6 @@ class Book extends Model
         });
     }
 
-    public function author(): BelongsTo
-    {
-        return $this->belongsTo(Author::class);
-    }
-
     /**
      * Set the user who added this book by storing their U_name
      *
@@ -65,7 +67,7 @@ class Book extends Model
             $this->save();
         }
     }
-    
+
     /**
      * Get the user who added this book by U_name
      *
@@ -74,5 +76,10 @@ class Book extends Model
     public function getAddedByUser()
     {
         return User::where('U_name', $this->AddBy)->first();
+    }
+
+    public function getImageUrlAttribute()
+    {
+        return $this->image ? asset('storage/' . $this->image) : null;
     }
 }

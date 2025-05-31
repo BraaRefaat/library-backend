@@ -21,6 +21,47 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
+## Operating Environment
+
+### System Requirements
+- PHP >= 8.2
+- Composer (PHP Package Manager)
+- Node.js and NPM (for frontend assets)
+- SQLite (default database) or MySQL/PostgreSQL
+- Web Server (Apache/Nginx) or PHP's built-in server for development
+
+### Development Tools
+- Laravel Sail (Docker-based development environment)
+- Laravel Pint (PHP code style fixer)
+- Laravel Pail (Log viewer)
+- PHPUnit for testing
+
+### Key Dependencies
+- Laravel Framework ^12.0
+- Laravel Sanctum ^4.0 (API Authentication)
+- Laravel Tinker ^2.10.1 (REPL for Laravel)
+
+### Development Workflow
+The project includes several development scripts that can be run using Composer:
+- `composer dev`: Starts the development environment with:
+  - Laravel development server
+  - Queue listener
+  - Log viewer
+  - Vite development server
+- `composer test`: Runs the test suite
+
+### Environment Configuration
+- Copy `.env.example` to `.env` for local configuration
+- Generate application key using `php artisan key:generate`
+- Configure database connection in `.env` file
+- Set up necessary environment variables for external services
+
+### Security Considerations
+- All sensitive configuration should be stored in `.env` file
+- API keys and secrets should never be committed to version control
+- Use Laravel Sanctum for API authentication
+- Follow Laravel's security best practices for production deployment
+
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.

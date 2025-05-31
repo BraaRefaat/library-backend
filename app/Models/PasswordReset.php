@@ -7,7 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class PasswordReset extends Model
 {
     protected $table = 'password_reset_tokens';
-    public $timestamps = false;
+
     protected $primaryKey = 'U_Mail';
-    protected $fillable = ['U_Mail', 'token', 'created_at'];
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    protected $fillable = [
+        'U_Mail',
+        'token',
+        'created_at'
+    ];
+
+    public $timestamps = false;
 }

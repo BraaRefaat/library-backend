@@ -7,7 +7,7 @@ use App\Models\Message;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class DepartmentController extends Controller
+class DepartmentController
 {
     /**
      * Get all departments
@@ -24,11 +24,11 @@ class DepartmentController extends Controller
     public function show($id)
     {
         $department = Department::find($id);
-        
+
         if (!$department) {
-            return response()->json(['error' => 'Department not found'], 404);
+            return response()->json(['error' => 'القسم غير موجود'], 404);
         }
-        
+
         return response()->json($department);
     }
 
@@ -38,13 +38,13 @@ class DepartmentController extends Controller
     public function getMessages($id)
     {
         $department = Department::find($id);
-        
+
         if (!$department) {
-            return response()->json(['error' => 'Department not found'], 404);
+            return response()->json(['error' => 'القسم غير موجود'], 404);
         }
-        
+
         $messages = Message::where('department_id', $id)->get();
-        
+
         return response()->json([
             'department' => $department,
             'messages' => $messages
@@ -58,6 +58,11 @@ class DepartmentController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'C_name' => 'required|string|max:255|unique:departments'
+        ], [
+            'C_name.required' => 'اسم القسم مطلوب',
+            'C_name.string' => 'اسم القسم يجب أن يكون نصاً',
+            'C_name.max' => 'اسم القسم يجب أن لا يتجاوز 255 حرف',
+            'C_name.unique' => 'هذا القسم موجود بالفعل'
         ]);
 
         if ($validator->fails()) {
@@ -65,7 +70,7 @@ class DepartmentController extends Controller
         }
 
         $department = Department::create($request->all());
-        
+
         return response()->json($department, 201);
     }
 
@@ -75,13 +80,18 @@ class DepartmentController extends Controller
     public function update(Request $request, $id)
     {
         $department = Department::find($id);
-        
+
         if (!$department) {
-            return response()->json(['error' => 'Department not found'], 404);
+            return response()->json(['error' => 'القسم غير موجود'], 404);
         }
-        
+
         $validator = Validator::make($request->all(), [
             'C_name' => 'required|string|max:255|unique:departments,C_name,' . $id . ',C_ID'
+        ], [
+            'C_name.required' => 'اسم القسم مطلوب',
+            'C_name.string' => 'اسم القسم يجب أن يكون نصاً',
+            'C_name.max' => 'اسم القسم يجب أن لا يتجاوز 255 حرف',
+            'C_name.unique' => 'هذا القسم موجود بالفعل'
         ]);
 
         if ($validator->fails()) {
@@ -89,7 +99,7 @@ class DepartmentController extends Controller
         }
 
         $department->update($request->all());
-        
+
         return response()->json($department);
     }
 
@@ -99,13 +109,13 @@ class DepartmentController extends Controller
     public function destroy($id)
     {
         $department = Department::find($id);
-        
+
         if (!$department) {
-            return response()->json(['error' => 'Department not found'], 404);
+            return response()->json(['error' => 'القسم غير موجود'], 404);
         }
-        
+
         $department->delete();
-        
-        return response()->json(['message' => 'Department deleted successfully']);
+
+        return response()->json(['message' => 'تم حذف القسم بنجاح']);
     }
 }

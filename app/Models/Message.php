@@ -20,6 +20,7 @@ class Message extends Model
         'copies',
         'AddBy',
         'DateAdd',
+        'year',
         'M_number',
         'M_notes',
         'department_id',
@@ -52,7 +53,7 @@ class Message extends Model
             $this->save();
         }
     }
-    
+
     /**
      * Get the user who added this message by U_name
      *
